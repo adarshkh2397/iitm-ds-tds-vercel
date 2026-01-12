@@ -1,12 +1,13 @@
 import json
 import math
 from pathlib import Path
-from fastapi import FastAPI, Request
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from mangum import Mangum
 
 app = FastAPI()
 
-# Enable CORS for all origins (required)
+# Enable CORS
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -38,19 +39,15 @@ async def compute_metrics(payload: dict):
         latencies = sorted(r["latency_ms"] for r in records)
         uptimes = [r["uptime_pct"] for r in records]
 
-        avg_latency = sum(latencies) / len(latencies)
-        avg_uptime = sum(uptimes) / len(uptimes)
-
         p95_index = math.ceil(0.95 * len(latencies)) - 1
-        p95_latency = latencies[p95_index]
-
-        breaches = sum(1 for r in records if r["latency_ms"] > threshold)
 
         response[region] = {
-            "avg_latency": round(avg_latency, 2),
-            "p95_latency": round(p95_latency, 2),
-            "avg_uptime": round(avg_uptime, 3),
-            "breaches": breaches,
+            "avg_latency": round(sum(latencies) / len(latencies), 2),
+            "p95_latency": round(latencies[p95_index], 2),
+            "avg_uptime": round(sum(uptimes) / len(uptimes), 3),
+            "breaches": sum(1 for r in records if r["latency_ms"] > threshold),
         }
 
     return response
+
+handler = Mangum(app)
