@@ -10,10 +10,11 @@ with open(DATA_PATH) as f:
 
 
 class handler(BaseHTTPRequestHandler):
+    
     def _set_cors(self):
         self.send_header("Access-Control-Allow-Origin", "*")
         self.send_header("Access-Control-Allow-Methods", "POST, OPTIONS")
-        self.send_header("Access-Control-Allow-Headers", "Content-Type")
+        self.send_header("Access-Control-Allow-Headers", "*")
 
     def do_OPTIONS(self):
         self.send_response(200)
